@@ -1,0 +1,45 @@
+postgres:
+  image: postgres:9.5
+  env_file: .env
+  volumes:
+    - ./dockerfiles/pgdata:/var/lib/postgresql/data/pgdata
+
+firstsite:
+  build: ./firstsite/web
+  ports:
+    - "9090:9090"
+  links:
+    - postgres:postgres
+    - data:data
+  env_file: .env
+  command: bash start.sh
+
+secondsite:
+  build: ./secondsite/web
+  ports:
+    - "9091:9091"
+  links:
+    - postgres:postgres
+    - data:data
+  env_file: .env
+  command: bash start.sh
+
+nginx:
+  build: ./nginx
+  volumes_from:
+    - data
+  env_file: .env
+  ports:
+    - "8080:80"
+  links:
+    - firstsite:firstsite
+    - secondsite:secondsite
+
+data:
+  image: ubuntu
+  volumes:
+    - .:/root
+    - ./static:/static
+
+
+
